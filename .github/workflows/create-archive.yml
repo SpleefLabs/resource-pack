@@ -1,0 +1,33 @@
+name: Create Archive
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least-privilege token: only allow writing releases.
+permissions:
+  contents: write
+
+# Never let two runs publish a release at the same time; a newer push wins.
+concurrency:
+  group: create-archive
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create archive
+        run: zip -r release.zip pack.mcmeta assets
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Resource Pack build ${{ github.run_number }}
+          files: release.zip
+          make_latest: true
